@@ -1,0 +1,1 @@
+model_trans_path_dic = {"farsi":""}

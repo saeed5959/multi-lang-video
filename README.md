@@ -7,7 +7,7 @@
 
 ### Pipleline
 
-    1-split audio from video
+    1-extract audio from video
     2-convert audio to text
     3-give audio and text to MFA to get time of any words in audio
     4-detect silence speech for splitting audio : time and duration
