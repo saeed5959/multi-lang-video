@@ -1,0 +1,4 @@
+
+CONDA_PATH = ""
+LEXICAN_PATH = ""
+ACOUSTIC_PATH = ""

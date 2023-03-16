@@ -1,3 +1,37 @@
+import subprocess
+import os
+import textgrid
+
+from core import settings
+
+def mfa_audio(input_folder:str, out_folder:str):
+
+    lexicon_path = settings.LEXICAN_PATH
+    acoustic_path = settings.ACOUSTIC_PATH
+
+    cmd = f'. {settings.CONDA_PATH} && conda activate aligner && mfa align --clean {input_folder} {lexicon_path} {acoustic_path} {out_folder}'
+    p = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
+    p.communicate()
+    tg_path = os.path.join(out_folder,os.listdir(out_folder)[0])
+    tg = textgrid.TextGrid.fromFile(tg_path)[0]
+
+    return tg
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -51,25 +85,7 @@ def split_text(text:str):
 
     return text_split,break_indexs
 
-def mfa(voice_path:str,text:str):
 
-    lexicon_path = settings.LEXICAN_PATH
-    acoustic_path = settings.ACOUSTIC_PATH
-    out_folder = tempfile.TemporaryDirectory()
-    input_folder = tempfile.TemporaryDirectory()
-
-    shutil.copy(voice_path,input_folder.name)
-    text_path = os.path.join(input_folder.name,os.path.basename(voice_path)[:-3]+"txt")
-    with open(text_path,"w") as file:
-        file.write(text)
-
-    cmd = f'. {settings.CONDA_PATH} && conda activate aligner && mfa align --clean {input_folder.name} {lexicon_path} {acoustic_path} {out_folder.name}'
-    p = subprocess.Popen(cmd, shell=True, executable='/bin/bash')
-    p.communicate()
-    tg_path = os.path.join(out_folder.name,os.listdir(out_folder.name)[0])
-    tg = textgrid.TextGrid.fromFile(tg_path)[0]
-
-    return tg
 
 def detect_split_times_sub(voice_path:str, text:str):
     tg = mfa(voice_path, text)

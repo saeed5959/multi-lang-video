@@ -1,53 +1,37 @@
 import argparse
 import moviepy.editor
-import speech_recognition as sr
 import os
 
 from core import configs
+from main import mfa, translate
 
 
-
-def audio_from_video(video_path:str, audio_path:str):
+def voice_from_video(video_path:str, voice_path:str):
 
     video = moviepy.editor.VideoFileClip(video_path)
     audio = video.audio
-    audio.write_audiofile(audio_path)
+    audio.write_audiofile(voice_path)
 
     return
 
-def audio_to_text_simple(audio_path:str, text_path:str):
-    
-    r = sr.Recognizer()
 
-    with sr.AudioFile(audio_path) as source:
-        audio = r.record(source)
-
-    text = r.recognize_google(audio)
-
-    with open(text_path) as file:
-        file.write(text)
-
-    return 
-
-
-    
 def convert_multi_lang(lang:str, video_path:str, out_path:str):
 
     model_trans_path = configs.model_trans_path_dic[lang]
     mfa_in_folder = "/home/saeed/software/python/multi-lang-video/test_data/in"
     mfa_out_folder = "/home/saeed/software/python/multi-lang-video/test_data/out"
-    audio_path = os.path.join(mfa_in_folder, os.path.basename(video_path)[:-3] + "wav")
+    voice_path = os.path.join(mfa_in_folder, os.path.basename(video_path)[:-3] + "wav")
     text_path = os.path.join(mfa_in_folder, os.path.basename(video_path)[:-3] + "txt")
     
 
     #extract audio from video
-    audio_from_video(video_path, audio_path)
+    voice_from_video(video_path, voice_path)
 
     #convert audio to text
-    audio_to_text_simple(audio_path, text_path)
+    translate.voice_to_text_simple(voice_path, text_path, model_trans_path)
 
     #give audio and text to MFA to get time of any words in audio
-    mfa_audio()
+    tg = mfa.mfa_audio(mfa_in_folder, mfa_out_folder)
 
     #detect silence speech for splitting audio : time and duration
     silence_duration()
