@@ -3,7 +3,7 @@ import moviepy.editor
 import os
 
 from core import configs
-from main import mfa, translate
+from main import mfa, translate, voice_to_text, text_to_voice
 
 
 def voice_from_video(video_path:str, voice_path:str):
@@ -28,26 +28,37 @@ def convert_multi_lang(lang:str, video_path:str, out_path:str):
     voice_from_video(video_path, voice_path)
 
     #convert audio to text
-    translate.voice_to_text_simple(voice_path, text_path, model_trans_path)
+    voice_to_text.voice_to_text_simple(voice_path, text_path, model_trans_path)
+    #voice_to_text.voice_to_text_vosk(voice_path, text_path, model_trans_path)
 
     #give audio and text to MFA to get time of any words in audio
     tg = mfa.mfa_audio(mfa_in_folder, mfa_out_folder)
 
     #detect silence speech for splitting audio : time and duration
-    silence_duration()
+    text_list, time_list, silence_list = mfa.silence_duration(tg)
 
     #convert every split text to translate-text
-    translate_text_func()
+    text_trans_list = translate.translate_text_func(text_list, lang)
 
     #convert every split translate-text to audio
-    text_to_audio.tts()
+    voice_list = text_to_voice.tts_gtts(text_trans_list, time_list)
 
     #concatenate all split audio genrated with silence duration to each other
-    concatenate_speech()
+    text_to_voice.concatenate_speech(voice_list, silence_list, out_path)
 
     return 
 
+def convert_multi_lang_direct(lang:str, video_path:str, out_path:str):
 
+    from pydub import AudioSegment, silence
+
+    myaudio = AudioSegment.from_wav("a-z-vowels.wav")
+
+    silence = silence.detect_silence(myaudio, min_silence_len=1000, silence_thresh=-16)
+
+    silence = [((start/1000),(stop/1000)) for start,stop in silence]
+
+    return 
 
 
 
