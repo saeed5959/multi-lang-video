@@ -44,7 +44,7 @@ def convert_multi_lang(lang:str, video_path:str, out_path:str):
     voice_list = text_to_voice.tts_gtts(text_trans_list, time_list)
 
     #concatenate all split audio genrated with silence duration to each other
-    text_to_voice.concatenate_speech(voice_list, silence_list, out_path)
+    text_to_voice.concatenate_speech(voice_list, time_list, silence_list, out_path)
 
     return 
 
@@ -59,17 +59,6 @@ def convert_multi_lang_direct(lang:str, video_path:str, out_path:str):
     silence = [((start/1000),(stop/1000)) for start,stop in silence]
 
     return 
-
-
-
-
-
-
-
-
-
-
-
 
 
 

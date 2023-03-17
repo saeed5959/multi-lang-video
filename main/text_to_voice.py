@@ -1,5 +1,8 @@
 from gtts import gTTS
 import pyttsx3
+import numpy as np
+import soundfile as sf
+import librosa
 
 from main import mfa
 #1-align based on duration
@@ -8,9 +11,12 @@ from main import mfa
 def tts_gtts(text_list:list, time_list:list):
 
     voice_list = []
-    for text in text_list:
-        voice_list.append(gTTS(text=text, lang="en", slow=False))
-
+    for count, text in enumerate(text_list):
+        voice = gTTS(text=text, lang="en", slow=False)
+        voice.save(f"/home/saeed/software/python/multi-lang-video/test_data/gtts/{count}.mp3")
+        voice_load, sr = librosa.load(f"/home/saeed/software/python/multi-lang-video/test_data/gtts/{count}.mp3")
+        voice_list.append(voice_load)
+        
     return voice_list
         
 
@@ -27,10 +33,20 @@ def tts_pyttsx3(text_list:list, time_list:list):
 
     return voice_list
 
-def concatenate_speech(voice_list, silence_list, out_path):
+def concatenate_speech(voice_list, time_list, silence_list, out_path):
 
-    for voice in voice_list:
-        mfa.mfa_audio(voice)
-        mfa.silence_duration()
+    voice_all = np.array([0])
+    for voice, time, silence in zip(voice_list, time_list, silence_list):
+        #mfa.mfa_audio(voice)
+        #mfa.silence_duration()
+        voice_time_silence = np.zeros(int(time+silence))
+        if len(voice)>(time+silence):
+            voice_time_silence = voice[:int(time+silence)]
 
+        else:
+            voice_time_silence[:len(voice)] = voice
+
+        voice_all = np.concatenate(voice_all, voice_time_silence)
+
+    sf.write(out_path, voice_all , 22050)
     return 
