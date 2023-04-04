@@ -12,7 +12,7 @@ def voice_to_text_simple(voice_path:str, text_path:str, model_trans_path:str):
 
     text = r.recognize_google(audio)
 
-    with open(text_path) as file:
+    with open(text_path,"w") as file:
         file.write(text)
 
     return 
