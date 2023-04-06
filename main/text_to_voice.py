@@ -33,20 +33,18 @@ def tts_pyttsx3(text_list:list, time_list:list):
 
     return voice_list
 
-def concatenate_speech(voice_list, time_list, silence_list, out_path):
+def concatenate_speech(voice_list, time_list, silence_list, first_silence, out_path):
 
-    voice_all = np.array([0])
+    voice_all = np.zeros(int(first_silence*22050))
     for voice, time, silence in zip(voice_list, time_list, silence_list):
-        #mfa.mfa_audio(voice)
-        #mfa.silence_duration()
-        voice_time_silence = np.zeros(int(time+silence))
-        if len(voice)>(time+silence):
-            voice_time_silence = voice[:int(time+silence)]
+        voice_time_silence = np.zeros(int((time+silence)*22050))
+        if len(voice)>int((time+silence)*22050):
+            voice_time_silence = voice[:int((time+silence)*22050)]
 
         else:
             voice_time_silence[:len(voice)] = voice
 
-        voice_all = np.concatenate(voice_all, voice_time_silence)
+        voice_all = np.concatenate((voice_all, voice_time_silence))
 
     sf.write(out_path, voice_all , 22050)
     return 

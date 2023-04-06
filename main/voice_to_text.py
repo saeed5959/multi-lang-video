@@ -3,19 +3,20 @@ from vosk import Model, KaldiRecognizer, SetLogLevel
 import subprocess
 import json
 
-def voice_to_text_simple(voice_path:str, text_path:str, model_trans_path:str):
+def voice_to_text_simple(voice_split_paths:str, model_trans_path:str):
     
     r = sr.Recognizer()
 
-    with sr.AudioFile(voice_path) as source:
-        audio = r.record(source)
+    text_list = []
+    for voice_path in voice_split_paths:
 
-    text = r.recognize_google(audio)
+        with sr.AudioFile(voice_path) as source:
+            audio = r.record(source)
 
-    with open(text_path,"w") as file:
-        file.write(text)
+        text = r.recognize_google(audio)
+        text_list.append(text)
 
-    return 
+    return text_list
 
 def voice_to_text_vosk(voice_path: str, text_path:str, model_trans_path:str):
 

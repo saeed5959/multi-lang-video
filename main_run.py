@@ -3,7 +3,7 @@ import moviepy.editor
 import os
 
 from core import configs
-from main import mfa, translate, voice_to_text, text_to_voice
+from main import mfa, translate, voice_to_text, text_to_voice, silence_detection
 
 
 def voice_from_video(video_path:str, voice_path:str):
@@ -55,17 +55,34 @@ def convert_multi_lang(lang:str, video_path:str, out_path:str):
 
     return 
 
+
 def convert_multi_lang_direct(lang:str, video_path:str, out_path:str):
 
-    from pydub import AudioSegment, silence
-
-    myaudio = AudioSegment.from_wav("a-z-vowels.wav")
-
-    silence = silence.detect_silence(myaudio, min_silence_len=1000, silence_thresh=-16)
-
-    silence = [((start/1000),(stop/1000)) for start,stop in silence]
+    model_stt_path = configs.model_trans_path_dic[lang]
+    default_path = "/home/saeed/software/python/multi-lang-video/test_data"
+    voice_path = os.path.join(default_path, os.path.basename(video_path)[:-3] + "wav")
+    
+    print("1")
+    #extract audio from video
+    voice_from_video(video_path, voice_path)
+    print("2")
+    #split audio in silence part
+    voice_split_paths, time_list, silence_list, first_silence = silence_detection.split(voice_path, default_path)
+    #convert audio to text
+    text_list = voice_to_text.voice_to_text_simple(voice_split_paths, model_stt_path)
+    #voice_to_text.voice_to_text_vosk(voice_path, text_path, model_trans_path)
+    print("3")
+    #convert every split text to translate-text
+    #text_trans_list = translate.translate_text_func(text_list, lang)
+    print("4")
+    #convert every split translate-text to audio
+    voice_list = text_to_voice.tts_gtts(text_list, time_list)
+    print("5")
+    #concatenate all split audio genrated with silence duration to each other
+    text_to_voice.concatenate_speech(voice_list, time_list, silence_list, first_silence, out_path)
 
     return 
+
 
 
 
