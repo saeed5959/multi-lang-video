@@ -3,7 +3,7 @@ from vosk import Model, KaldiRecognizer, SetLogLevel
 import subprocess
 import json
 
-def voice_to_text_simple(voice_split_paths:str, model_trans_path:str):
+def voice_to_text_simple(voice_split_paths:str):
     
     r = sr.Recognizer()
 
@@ -18,32 +18,34 @@ def voice_to_text_simple(voice_split_paths:str, model_trans_path:str):
 
     return text_list
 
-def voice_to_text_vosk(voice_path: str, text_path:str, model_trans_path:str):
+def voice_to_text_vosk(voice_split_paths: str, model_stt_path:str):
 
     SetLogLevel(0)
 
-    model = Model(model_trans_path)
+    model = Model(model_stt_path)
 
     sample_rate=16000
     rec = KaldiRecognizer(model, sample_rate)
-    process = subprocess.Popen(['ffmpeg', '-loglevel', 'quiet', '-i',
-                                voice_path,
-                                '-ar', str(sample_rate) , '-ac', '1', '-f', 's16le', '-'],
-                                stdout=subprocess.PIPE)
 
-    text_all = ''
-    while True:
-        data = process.stdout.read(4000)
-        if len(data) == 0:
-            break
-        if rec.AcceptWaveform(data):
-            text = json.loads(rec.Result())
-            text_all += " " + text["text"]
+    text_list = []
 
-    text = json.loads(rec.FinalResult())
-    text_all += " " + text["text"]
+    for voice_path in voice_split_paths:
+        process = subprocess.Popen(['ffmpeg', '-loglevel', 'quiet', '-i',
+                                    voice_path,
+                                    '-ar', str(sample_rate) , '-ac', '1', '-f', 's16le', '-'],
+                                    stdout=subprocess.PIPE)
 
-    with open(text_path) as file:
-        file.write(text)
+        text_all = ''
+        while True:
+            data = process.stdout.read(4000)
+            if len(data) == 0:
+                break
+            if rec.AcceptWaveform(data):
+                text = json.loads(rec.Result())
+                text_all += " " + text["text"]
 
-    return
+        text = json.loads(rec.FinalResult())
+        text_all += " " + text["text"]
+        text_list.append(text_all)
+
+    return text_list

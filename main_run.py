@@ -1,35 +1,10 @@
 import argparse
-import moviepy.editor
 import os
 
 from core import configs,settings
-from main import translate, voice_to_text, text_to_voice, silence_detection
+from main import translate, voice_to_text, text_to_voice, silence_detection, utils
 
 default_path = settings.DEFAULT_PATH
-
-def voice_from_video(video_path:str, voice_path:str):
-
-    video = moviepy.editor.VideoFileClip(video_path)
-    audio = video.audio
-    audio.write_audiofile(voice_path,22050)
-
-    return
-
-def trim_video(video_path:str, first_time:int, last_time:int, out_path:str):
-
-    video = moviepy.editor.VideoFileClip(video_path)
-
-    clip1 = video.subclip(first_time, last_time)
-    clip1.write_videofile(out_path)
-
-def replace_audio_in_movie(video_path:str, audio_path:str, video_path_out:str):
-
-    audio = moviepy.editor.AudioFileClip(audio_path)
-    video = moviepy.editor.VideoFileClip(video_path)
-
-    final_video = video.set_audio(audio)
-    final_video.write_videofile(video_path_out)
-
 
 
 def convert_multi_lang(lang:str, video_path:str, audio_out_path:str, video_out_path:str):
@@ -40,16 +15,21 @@ def convert_multi_lang(lang:str, video_path:str, audio_out_path:str, video_out_p
     
     print("1")
     #extract audio from video
-    voice_from_video(video_path, voice_path)
+    utils.voice_from_video(video_path, voice_path,sr=16000)
+
+    print("1_denoise")
+    #denoiser
+    utils.denoiser(voice_path, voice_path)
 
     print("2")
     #split audio in silence part
     voice_split_paths, time_list, silence_list, first_silence = silence_detection.split(voice_path, default_path)
-
+    print(first_silence)
+    print(silence_list)
     print("3")
     #convert audio to text
-    text_list = voice_to_text.voice_to_text_simple(voice_split_paths, model_stt_path)
-
+    text_list = voice_to_text.voice_to_text_vosk(voice_split_paths, model_stt_path)
+    print(text_list)
     #voice_to_text.voice_to_text_vosk(voice_path, text_path, model_trans_path)
 
     print("4")
@@ -66,8 +46,8 @@ def convert_multi_lang(lang:str, video_path:str, audio_out_path:str, video_out_p
 
     print("7")
     #replace generated audio in video
-    replace_audio_in_movie(video_path, audio_out_path, video_out_path)
-    
+    utils.replace_audio_in_movie(video_path, audio_out_path, video_out_path)
+
     return 
 
 

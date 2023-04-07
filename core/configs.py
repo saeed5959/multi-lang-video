@@ -1,1 +1,1 @@
-model_trans_path_dic = {"en":""}
+model_trans_path_dic = {"en":"/home/saeed/software/python/multi-lang-video/test_data/"}

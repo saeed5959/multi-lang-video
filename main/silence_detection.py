@@ -5,12 +5,17 @@ def split(voice_path:str, default_path:str):
 
     voice = AudioSegment.from_wav(voice_path)
 
-    silence_time = silence.detect_silence(voice, min_silence_len=1000, silence_thresh=-45)
-
+    silence_time = silence.detect_silence(voice, min_silence_len=500, silence_thresh=-45)
+    print(silence_time)
     voice_split_paths = []
     time_list = []
     silence_list = []
+
+    if silence_time[0][0]>1000:
+        silence_time = [[0,0]] + silence_time
+
     first_silence = silence_time[0][1]
+        
 
     for count in range(len(silence_time)-1):
 
