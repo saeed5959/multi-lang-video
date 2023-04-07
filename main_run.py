@@ -2,9 +2,10 @@ import argparse
 import moviepy.editor
 import os
 
-from core import configs
-from main import mfa, translate, voice_to_text, text_to_voice, silence_detection
+from core import configs,settings
+from main import translate, voice_to_text, text_to_voice, silence_detection
 
+default_path = settings.DEFAULT_PATH
 
 def voice_from_video(video_path:str, voice_path:str):
 
@@ -21,66 +22,52 @@ def trim_video(video_path:str, first_time:int, last_time:int, out_path:str):
     clip1 = video.subclip(first_time, last_time)
     clip1.write_videofile(out_path)
 
+def replace_audio_in_movie(video_path:str, audio_path:str, video_path_out:str):
 
-def convert_multi_lang(lang:str, video_path:str, out_path:str):
+    audio = moviepy.editor.AudioFileClip(audio_path)
+    video = moviepy.editor.VideoFileClip(video_path)
 
-    model_trans_path = configs.model_trans_path_dic[lang]
-    mfa_in_folder = "/home/saeed/software/python/multi-lang-video/test_data/in"
-    mfa_out_folder = "/home/saeed/software/python/multi-lang-video/test_data/out"
-    voice_path = os.path.join(mfa_in_folder, os.path.basename(video_path)[:-3] + "wav")
-    text_path = os.path.join(mfa_in_folder, os.path.basename(video_path)[:-3] + "txt")
-    
-    print("1")
-    #extract audio from video
-    voice_from_video(video_path, voice_path)
-    print("2")
-    #convert audio to text
-    voice_to_text.voice_to_text_simple(voice_path, text_path, model_trans_path)
-    #voice_to_text.voice_to_text_vosk(voice_path, text_path, model_trans_path)
-    print("3")
-    #give audio and text to MFA to get time of any words in audio
-    tg = mfa.mfa_audio(mfa_in_folder, mfa_out_folder)
-    print("4")
-    #detect silence speech for splitting audio : time and duration
-    text_list, time_list, silence_list = mfa.silence_duration(tg)
-    print("5")
-    #convert every split text to translate-text
-    text_trans_list = translate.translate_text_func(text_list, lang)
-    print("6")
-    #convert every split translate-text to audio
-    voice_list = text_to_voice.tts_gtts(text_trans_list, time_list)
-    print("7")
-    #concatenate all split audio genrated with silence duration to each other
-    text_to_voice.concatenate_speech(voice_list, time_list, silence_list, out_path)
-
-    return 
+    final_video = video.set_audio(audio)
+    final_video.write_videofile(video_path_out)
 
 
-def convert_multi_lang_direct(lang:str, video_path:str, out_path:str):
+
+def convert_multi_lang(lang:str, video_path:str, audio_out_path:str, video_out_path:str):
 
     model_stt_path = configs.model_trans_path_dic[lang]
-    default_path = "/home/saeed/software/python/multi-lang-video/test_data"
+    
     voice_path = os.path.join(default_path, os.path.basename(video_path)[:-3] + "wav")
     
     print("1")
     #extract audio from video
     voice_from_video(video_path, voice_path)
+
     print("2")
     #split audio in silence part
     voice_split_paths, time_list, silence_list, first_silence = silence_detection.split(voice_path, default_path)
+
+    print("3")
     #convert audio to text
     text_list = voice_to_text.voice_to_text_simple(voice_split_paths, model_stt_path)
+
     #voice_to_text.voice_to_text_vosk(voice_path, text_path, model_trans_path)
-    print("3")
+
+    print("4")
     #convert every split text to translate-text
     #text_trans_list = translate.translate_text_func(text_list, lang)
-    print("4")
+
+    print("5")
     #convert every split translate-text to audio
     voice_list = text_to_voice.tts_gtts(text_list, time_list)
-    print("5")
-    #concatenate all split audio genrated with silence duration to each other
-    text_to_voice.concatenate_speech(voice_list, time_list, silence_list, first_silence, out_path)
 
+    print("6")
+    #concatenate all split audio genrated with silence duration to each other
+    text_to_voice.concatenate_speech(voice_list, time_list, silence_list, first_silence, audio_out_path)
+
+    print("7")
+    #replace generated audio in video
+    replace_audio_in_movie(video_path, audio_out_path, video_out_path)
+    
     return 
 
 

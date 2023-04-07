@@ -3,18 +3,20 @@ import pyttsx3
 import numpy as np
 import soundfile as sf
 import librosa
+import os
 
-from main import mfa
-#1-align based on duration
-#choose a library that you can change its speed
+from core import settings
+
+default_path = settings.DEFAULT_PATH
 
 def tts_gtts(text_list:list, time_list:list):
 
     voice_list = []
     for count, text in enumerate(text_list):
         voice = gTTS(text=text, lang="en", slow=False)
-        voice.save(f"/home/saeed/software/python/multi-lang-video/test_data/gtts/{count}.mp3")
-        voice_load, sr = librosa.load(f"/home/saeed/software/python/multi-lang-video/test_data/gtts/{count}.mp3")
+        voice_path = os.path.join(default_path,f"{count}.mp3")
+        voice.save(voice_path)
+        voice_load, sr = librosa.load(voice_path)
         voice_list.append(voice_load)
         
     return voice_list
@@ -33,13 +35,17 @@ def tts_pyttsx3(text_list:list, time_list:list):
 
     return voice_list
 
+
 def concatenate_speech(voice_list, time_list, silence_list, first_silence, out_path):
 
-    voice_all = np.zeros(int(first_silence*22050))
+    voice_all = np.zeros(int(first_silence*22050/1000))
+
     for voice, time, silence in zip(voice_list, time_list, silence_list):
-        voice_time_silence = np.zeros(int((time+silence)*22050))
-        if len(voice)>int((time+silence)*22050):
-            voice_time_silence = voice[:int((time+silence)*22050)]
+
+        voice_time_silence = np.zeros(int((time+silence)*22050/1000))
+
+        if len(voice)>int((time+silence)*22050/1000):
+            voice_time_silence = voice[:int((time+silence)*22050/1000)]
 
         else:
             voice_time_silence[:len(voice)] = voice
